@@ -30,11 +30,12 @@ class KMeans:
                     if matrix has more than 2 dimensions, the dimensionality of the sample space is the length of
                     the last dimension
         """
-        #######################################################
-        ##  YOU MUST REMOVE THE REST OF THE CODE OF THIS FUNCTION
-        ##  AND CHANGE FOR YOUR OWN CODE
-        #######################################################
-        self.X = np.random.rand(100, 5)
+        
+        X = X.astype(float)
+        if len(X.shape) > 2:
+            F, C, D = X.shape
+            X = X.reshape(F*C, D)
+        self.X = X
 
     def _init_options(self, options=None):
         """
