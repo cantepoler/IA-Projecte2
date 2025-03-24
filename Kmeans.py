@@ -71,14 +71,25 @@ class KMeans:
         #######################################################
         ##  YOU MUST REMOVE THE REST OF THE CODE OF THIS FUNCTION
         ##  AND CHANGE FOR YOUR OWN CODE
-        #######################################################
+        #######################################################    
+        
+        elements_unics = []
         if self.options['km_init'].lower() == 'first':
-            self.centroids = np.random.rand(self.K, self.X.shape[1])
-            self.old_centroids = np.random.rand(self.K, self.X.shape[1])
-        else:
-            self.centroids = np.random.rand(self.K, self.X.shape[1])
-            self.old_centroids = np.random.rand(self.K, self.X.shape[1])
-
+            for ind, fila in enumerate(self.X):
+                if not any(np.array_equal(fila, element) for element in elements_unics):#Si la fila encara no ha estat triada:
+                    elements_unics.append(fila)
+                    if len(elements_unics) == self.K:
+                        break;
+            self.centroids = np.array(elements_unics)
+            
+        elif self.options['km_init'].lower() == 'random':
+            indexs_aleatoris = np.random.choice(self.X.shape[0], size=self.K, replace=False)
+            self.centroids = self.X[indexs_aleatoris]
+            
+        elif self.options['km_init'].lower() == 'custom':
+            indexs_aleatoris = np.random.choice(self.X.shape[0], size=self.K, replace=False)
+            self.centroids = self.X[indexs_aleatoris]
+            
     def get_labels(self):
         """
         Calculates the closest centroid of all points in X and assigns each point to the closest centroid
