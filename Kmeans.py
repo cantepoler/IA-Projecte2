@@ -91,12 +91,16 @@ class KMeans:
     def get_centroids(self):
         """
         Calculates coordinates of centroids based on the coordinates of all the points assigned to the centroid
+
+        Args:
+            None
         """
-        #######################################################
-        ##  YOU MUST REMOVE THE REST OF THE CODE OF THIS FUNCTION
-        ##  AND CHANGE FOR YOUR OWN CODE
-        #######################################################
-        pass
+        self.old_centroids = np.copy(self.centroids)
+
+        # Check if there is any cluster without points and calculate the new centroids
+        if np.any(self.labels) > 0:
+            for i in np.arange(self.K):
+                self.centroids[i] = np.mean(self.X[self.labels == i], axis=0)
 
     def converges(self):
         """
@@ -130,34 +134,22 @@ class KMeans:
         #######################################################
         pass
 
-    def find_bestK(self, max_K):
-        """
-         sets the best k analysing the results up to 'max_K' clusters
-        """
-        #######################################################
-        ##  YOU MUST REMOVE THE REST OF THE CODE OF THIS FUNCTION
-        ##  AND CHANGE FOR YOUR OWN CODE
-        #######################################################
-        pass
+   def find_bestK(self, max_K):
+        if self.options['fitting'] == 'WCD':
+            best_K = self.bestK_WCD(10)
+        elif self.options['fitting'] == 'Fisher':
+            best_K = self.bestK_fisher(10)
+    return best_K
 
 
 def distance(X, C):
     """
     Calculates the distance between each pixel and each centroid
     Args:
-        X (numpy array): PxD 1st set of data points (usually data points)
-        C (numpy array): KxD 2nd set of data points (usually cluster centroids points)
-
-    Returns:
-        dist: PxK numpy array position ij is the distance between the
-        i-th point of the first set an the j-th point of the second set
+        X (numpy array): PxD 1st set of data points 
+        C (numpy array): KxD 2nd set of data points 
     """
-
-    #########################################################
-    ##  YOU MUST REMOVE THE REST OF THE CODE OF THIS FUNCTION
-    ##  AND CHANGE FOR YOUR OWN CODE
-    #########################################################
-    return np.random.rand(X.shape[0], C.shape[0])
+    return np.linalg.norm(np.expand_dims(X, axis=1) - C, axis=2)
 
 
 def get_colors(centroids):
