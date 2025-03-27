@@ -1,5 +1,5 @@
-__authors__ = 'TO_BE_FILLED'
-__group__ = 'TO_BE_FILLED'
+__authors__ = ['1706732', '1707531', '0000000']
+__group__ = '32'
 
 import numpy as np
 import utils
@@ -18,6 +18,8 @@ class KMeans:
         self.K = K
         self._init_X(X)
         self._init_options(options)  # DICT options
+        self._init_centroids()
+        
 
     #############################################################
     ##  THIS FUNCTION CAN BE MODIFIED FROM THIS POINT, if needed
@@ -89,7 +91,7 @@ class KMeans:
         elif self.options['km_init'].lower() == 'custom':
             indexs_aleatoris = np.random.choice(self.X.shape[0], size=self.K, replace=False)
             self.centroids = self.X[indexs_aleatoris]
-            
+                        
     def get_labels(self):
         """
         Calculates the closest centroid of all points in X and assigns each point to the closest centroid
@@ -98,8 +100,10 @@ class KMeans:
         ##  YOU MUST REMOVE THE REST OF THE CODE OF THIS FUNCTION
         ##  AND CHANGE FOR YOUR OWN CODE
         #######################################################
-        self.labels = np.random.randint(self.K, size=self.X.shape[0])
-
+        distancies = distance(self.X, self.centroids)
+        
+        self.labels = np.argmin(distancies, axis=1)
+        
     def get_centroids(self):
         """
         Calculates coordinates of centroids based on the coordinates of all the points assigned to the centroid
@@ -120,36 +124,59 @@ class KMeans:
         ##  YOU MUST REMOVE THE REST OF THE CODE OF THIS FUNCTION
         ##  AND CHANGE FOR YOUR OWN CODE
         #######################################################
-        return True
+        
+        if (np.equal(self.centroids, self.old_centroids).all()):
+            return True
+        return False
 
     def fit(self):
         """
         Runs K-Means algorithm until it converges or until the number of iterations is smaller
         than the maximum number of iterations.
         """
-        #######################################################
-        ##  YOU MUST REMOVE THE REST OF THE CODE OF THIS FUNCTION
-        ##  AND CHANGE FOR YOUR OWN CODE
-        #######################################################
-        pass
-
+        it = 0
+        while 1:
+            self.get_labels()
+            self.get_centroids()
+            it += 1
+            if self.converges(): break;
+        
+        
+        
     def withinClassDistance(self):
         """
          returns the within class distance of the current clustering
         """
+        distancies = distance(self.X, self.centroids)
+        
+        dist_punt_centroid = distancies[np.arange(len(self.X)), self.labels]
+        self.WCD = np.mean(dist_punt_centroid)
+        return np.mean(dist_punt_centroid)
+    
+    
+    
 
-        #######################################################
-        ##  YOU MUST REMOVE THE REST OF THE CODE OF THIS FUNCTION
-        ##  AND CHANGE FOR YOUR OWN CODE
-        #######################################################
-        pass
+    def find_bestK(self, max_K):
+        minim = 20 #% minim acceptable
+        best_K = max_K
+        anterior = None
+        
+        wcds = []
+        
+        for k in range(2, max_K+1):
+            kmeans = KMeans(self.X, K=k, options=self.options)
+            kmeans.fit()
+            WCD_k = kmeans.withinClassDistance()
+            wcds.append(WCD_k)
 
-        def find_bestK(self, max_K):
-            if self.options['fitting'] == 'WCD':
-                best_K = self.bestK_WCD(10)
-            elif self.options['fitting'] == 'Fisher':
-                best_K = self.bestK_fisher(10)
-            return best_K
+            if anterior is not None:
+                decrement = 100*(1-(WCD_k/anterior))    #Formula pdf
+                if decrement < minim:
+                    best_K = k-1
+                    break
+            
+            anterior = WCD_k
+        return best_K
 
 
 def distance(X, C):
@@ -181,4 +208,9 @@ def get_colors(centroids):
     ##  YOU MUST REMOVE THE REST OF THE CODE OF THIS FUNCTION
     ##  AND CHANGE FOR YOUR OWN CODE
     #########################################################
-    return list(utils.colors)
+    
+    probs = utils.get_color_prob(centroids)
+    
+    colors = np.argmax(probs, axis=1)
+    
+    return [utils.colors[i] for i in colors]
