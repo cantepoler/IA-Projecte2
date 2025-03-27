@@ -149,7 +149,7 @@ class KMeans:
         """
         distancies = distance(self.X, self.centroids)
         
-        dist_punt_centroid = distancies[np.arange(len(self.X)), self.labels]
+        dist_punt_centroid = pow(distancies[np.arange(len(self.X)), self.labels], 2)
         self.WCD = np.mean(dist_punt_centroid)
         return np.mean(dist_punt_centroid)
     
@@ -176,6 +176,8 @@ class KMeans:
                     break
             
             anterior = WCD_k
+            
+        self.K = best_K
         return best_K
 
 
