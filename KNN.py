@@ -17,15 +17,19 @@ class KNN:
 
     def _init_train(self, train_data):
         """
-        initializes the train data
-        :param train_data: PxMxNx3 matrix corresponding to P color images
-        :return: assigns the train set to the matrix self.train_data shaped as PxD (P points in a D dimensional space)
+        Initializes the train data
+        Args:
+            train_data: PxMxNx3 matrix corresponding to P color images
+        Return: 
+            assigns the train set to the matrix self.train_data shaped as PxD (P points in a D dimensional space)
         """
-        #######################################################
-        ##  YOU MUST REMOVE THE REST OF THE CODE OF THIS FUNCTION
-        ##  AND CHANGE FOR YOUR OWN CODE
-        #######################################################
-        self.train_data = np.random.randint(8, size=[10, 4800])
+        if len(train_data.shape) == 3:
+            # Already in Grayscale
+            if train_data.shape[-1] == 3: # Not sure if we can import
+                # If RGB, convert to grayscale # Not sure if we can import
+                train_data = rgb2gray(train_data) # Not sure if we can import
+            self.train_data = np.array(train_data.reshape((train_data.shape[0], -1)), dtype="float")
+
 
     def get_k_neighbours(self, test_data, k):
         """
