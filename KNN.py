@@ -1,5 +1,5 @@
-__authors__ = 'TO_BE_FILLED'
-__group__ = 'TO_BE_FILLED'
+__authors__ = ['1706732', '1707531', '0000000']
+__group__ = '14'
 
 import numpy as np
 import math
@@ -17,15 +17,39 @@ class KNN:
 
     def _init_train(self, train_data):
         """
-        initializes the train data
-        :param train_data: PxMxNx3 matrix corresponding to P color images
-        :return: assigns the train set to the matrix self.train_data shaped as PxD (P points in a D dimensional space)
+        Initializes the train data
+        Args:
+            train_data: PxMxNx3 matrix corresponding to P color images
+        Return: 
+            assigns the train set to the matrix self.train_data shaped as PxD (P points in a D dimensional space)
         """
-        #######################################################
-        ##  YOU MUST REMOVE THE REST OF THE CODE OF THIS FUNCTION
-        ##  AND CHANGE FOR YOUR OWN CODE
-        #######################################################
-        self.train_data = np.random.randint(8, size=[10, 4800])
+        if len(train_data.shape) == 3:
+            # Already in Grayscale
+            if train_data.shape[-1] == 3: # Not sure if we can import
+                # If RGB, convert to grayscale # Not sure if we can import
+                train_data = rgb2gray(train_data) # Not sure if we can import
+            self.train_data = np.array(train_data.reshape((train_data.shape[0], -1)), dtype="float")
+
+    
+    def _init_train_flip(self, train_data):
+        """
+        Initializes the train data
+        Args:
+            train_data: PxMxNx3 matrix corresponding to P color images
+        Return: 
+            assigns the train set (flipped horizontally) to the matrix self.train_data shaped as PxD (P points in a D dimensional space)
+        """
+        if len(train_data.shape) == 3:
+            # Already in Grayscale
+            if train_data.shape[-1] == 3: 
+                # If RGB, convert to grayscale 
+                train_data = rgb2gray(train_data) 
+            # Flip the images horizontally
+            train_data_flipped = np.flip(train_data, axis=1)
+            train_data_flipped = np.array(train_data_flipped.reshape((train_data_flipped.shape[0], -1)), dtype="float")
+            train_data = np.array(train_data.reshape((train_data.shape[0], -1)), dtype="float")
+            self.train_data = np.concatenate((train_data, train_data_flipped), axis=0)
+
 
     def get_k_neighbours(self, test_data, k):
         """
@@ -35,23 +59,46 @@ class KNN:
         :return: the matrix self.neighbors is created (NxK)
                  the ij-th entry is the j-th nearest train point to the i-th test point
         """
-        #######################################################
-        ##  YOU MUST REMOVE THE REST OF THE CODE OF THIS FUNCTION
-        ##  AND CHANGE FOR YOUR OWN CODE
-        #######################################################
-        self.neighbors = np.random.randint(k, size=[test_data.shape[0], k])
+        
+        test_data = np.array(test_data, dtype = float)
+        if len(test_data.shape) > 2:
+            test_data = test_data.reshape(test_data.shape[0], -1)
+            
+        distancies = cdist(test_data, self.train_data, metric='euclidean')
+        
+        mespropers_ind = np.argpartition(distancies, k, axis=1)[:, :k]
+        self.neighbors = self.labels[mespropers_ind]
+        
+        fila_ind = np.arange(distancies.shape[0])[:, None]
+        distancies_veins = distancies[fila_ind, mespropers_ind]
+        
+        ind_ordenats = np.argsort(distancies_veins, axis=1)
+        self.neighbors = np.take_along_axis(self.neighbors, ind_ordenats, axis=1)
+        
 
     def get_class(self):
         """
         Get the class by maximum voting
-        :return: 1 array of Nx1 elements. For each of the rows in self.neighbors gets the most voted value
+        Args:
+            None
+        Return:
+            1 array of Nx1 elements. For each of the rows in self.neighbors gets the most voted value
                 (i.e. the class at which that row belongs)
         """
-        #######################################################
-        ##  YOU MUST REMOVE THE REST OF THE CODE OF THIS FUNCTION
-        ##  AND CHANGE FOR YOUR OWN CODE
-        #######################################################
-        return np.random.randint(10, size=self.neighbors.size), np.random.random(self.neighbors.size)
+        #m = max elements
+        #c = neighbour class
+        
+        neighbour_class = []    
+        for neighbors in self.neighbors:
+            #buscamos las clases sin repeticiones, los indices de cada clase y la cantidad de veces que se repite cada clase
+            clas, index, inverse, counts = np.unique(neighbors, return_index=True, return_inverse=True, return_counts=True)
+            #posiciones donde count es maximo
+            m = np.where(counts == np.max(counts))[0]
+            #cojemos el neighbor con el indice mas pequeño de entre los que count es maximo
+            c = neighbors[index[m].min()]
+            #añadimos a la lista
+            neighbour_class.append(c)
+        return np.array(neighbour_class)
 
     def predict(self, test_data, k):
         """
