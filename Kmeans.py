@@ -19,6 +19,8 @@ class KMeans:
         self._init_X(X)
         self._init_options(options)  # DICT options
         self._init_centroids()
+        self.max_iter = 500000
+        self.WCD = None
         
 
     #############################################################
@@ -136,13 +138,12 @@ class KMeans:
         Runs K-Means algorithm until it converges or until the number of iterations is smaller
         than the maximum number of iterations.
         """
-        it = 0
         while 1:
             self.get_labels()
             self.get_centroids()
-            it += 1
+            self.num_iter += 1
             if self.converges(): break;
-        
+            elif self.num_iter >= self.max_iter: break;
         
         
     def withinClassDistance(self):
