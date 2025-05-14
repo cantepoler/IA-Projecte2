@@ -87,10 +87,13 @@ def Kmean_statistics(llista_imgs, Kmax):
     glob_iteracions = []     #Seran llistes de llistes, per a cada kmeans
     glob_temps = []
     ks = list(range(2, Kmax+1))
-    for img in llista_imgs:        
+    i = 0
+    for img in llista_imgs:
+        i+=1        
         wcds = []
         iteracions = []
         temps = []
+        print(f"Imatge {i}/{len(llista_imgs)}")
         
         for k in ks:
             kmeans = KMeans(img, k, options=options)
@@ -186,12 +189,12 @@ if __name__ == '__main__':
     
     #Aqui començen les diverses proves que hem fet:
     
-    knn = KNN(train_imgs, train_class_labels)
-    knn_predicts = knn.predict(test_imgs, 1)
+    # knn = KNN(train_imgs, train_class_labels)
+    # knn_predicts = knn.predict(test_imgs, 1)
     
-    print (Get_shape_accuracy(knn_predicts, test_class_labels)) #% d'encerts de KNN
+    # print (Get_shape_accuracy(knn_predicts, test_class_labels)) #% d'encerts de KNN
     
     options = {'km_init':'maxDist'}
     
-    Kmean_statistics(train_imgs[0:10], 10)
+    Kmean_statistics(train_imgs, 6)
 
