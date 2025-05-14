@@ -1,7 +1,8 @@
-__authors__ = 'TO_BE_FILLED'
-__group__ = 'TO_BE_FILLED'
+__authors__ = '1706732, , '
+__group__ = '14'
 
 from Kmeans import *
+from KNN import *
 from utils_data import read_dataset, read_extended_dataset, crop_images, visualize_k_means
 import time
 import matplotlib.pyplot as plt
@@ -149,7 +150,7 @@ def Get_shape_accuracy(result_labels, gt_labels):
     for r_label, gt_label in zip(result_labels, gt_labels):
         if r_label == gt_label:
             result += 1
-    return result / len(r_label)
+    return result / len(result_labels)
 
 def Get_color_accuracy(result_labels, gt_labels):
     """
@@ -183,19 +184,12 @@ if __name__ == '__main__':
     imgs, class_labels, color_labels, upper, lower, background = read_extended_dataset()
     cropped_images = crop_images(imgs, upper, lower)
     
+    #Aqui començen les diverses proves que hem fet:
     
-    kmeans = KMeans(train_imgs[0], K = 2)
+    knn = KNN(train_imgs, train_class_labels)
+    knn_predicts = knn.predict(test_imgs, 1)
     
-    Kmean_statistics(train_imgs[0:5], 10)
-    
-    labels = []
-    for i in range(30):
-        kmeans = KMeans(train_imgs[i], K = 3)
-        kmeans.fit()
-        labels.append(get_colors(kmeans.centroids))
-    
-    print(Get_color_accuracy(labels, train_color_labels[0:30]))
-    
+    print (Get_shape_accuracy(knn_predicts, test_class_labels)) #% d'encerts de KNN
     
 
 

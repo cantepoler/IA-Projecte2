@@ -4,6 +4,7 @@ __group__ = '14'
 import numpy as np
 import math
 import operator
+import utils
 from scipy.spatial.distance import cdist
 
 
@@ -23,12 +24,11 @@ class KNN:
         Return: 
             assigns the train set to the matrix self.train_data shaped as PxD (P points in a D dimensional space)
         """
-        if len(train_data.shape) == 3:
-            # Already in Grayscale
-            if train_data.shape[-1] == 3: # Not sure if we can import
-                # If RGB, convert to grayscale # Not sure if we can import
-                train_data = rgb2gray(train_data) # Not sure if we can import
-            self.train_data = np.array(train_data.reshape((train_data.shape[0], -1)), dtype="float")
+        if len(train_data.shape) == 4 and train_data.shape[-1] == 3:
+            # Hem de convertir a grayscale
+                train_data = utils.rgb2gray(train_data)
+                
+        self.train_data = np.array(train_data.reshape((train_data.shape[0], -1)), dtype="float")
 
     
     def _init_train_flip(self, train_data):
@@ -43,7 +43,7 @@ class KNN:
             # Already in Grayscale
             if train_data.shape[-1] == 3: 
                 # If RGB, convert to grayscale 
-                train_data = rgb2gray(train_data) 
+                train_data = utils.rgb2gray(train_data) 
             # Flip the images horizontally
             train_data_flipped = np.flip(train_data, axis=1)
             train_data_flipped = np.array(train_data_flipped.reshape((train_data_flipped.shape[0], -1)), dtype="float")
@@ -61,6 +61,11 @@ class KNN:
         """
         
         test_data = np.array(test_data, dtype = float)
+        
+        if len(test_data.shape) == 4 and test_data.shape[-1] == 3:
+            # Hem de convertir a grayscale
+                test_data = utils.rgb2gray(test_data)
+        
         if len(test_data.shape) > 2:
             test_data = test_data.reshape(test_data.shape[0], -1)
             
