@@ -93,7 +93,7 @@ def Kmean_statistics(llista_imgs, Kmax):
         temps = []
         
         for k in ks:
-            kmeans = KMeans(img, k)
+            kmeans = KMeans(img, k, options=options)
             time_start = time.time()
             kmeans.fit()
             time_end = time.time()
@@ -191,6 +191,7 @@ if __name__ == '__main__':
     
     print (Get_shape_accuracy(knn_predicts, test_class_labels)) #% d'encerts de KNN
     
-
-
+    options = {'km_init':'maxDist'}
+    
+    Kmean_statistics(train_imgs[0:10], 10)
 

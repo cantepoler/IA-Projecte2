@@ -90,9 +90,17 @@ class KMeans:
             indexs_aleatoris = np.random.choice(self.X.shape[0], size=self.K, replace=False)
             self.centroids = self.X[indexs_aleatoris]
             
-        elif self.options['km_init'].lower() == 'custom':
-            indexs_aleatoris = np.random.choice(self.X.shape[0], size=self.K, replace=False)
-            self.centroids = self.X[indexs_aleatoris]
+        elif self.options['km_init'].lower() == 'maxdist':
+            centroides = [self.X[np.random.randint(self.X.shape[0])]] #El primer centroide és aleatori
+            
+            for i in range (1, self.K):                                 #Els següents són els que més lluny es troben dels centroides ja triats
+                dists = distance(self.X, np.array(centroides))
+                min_dists = np.min(dists, axis=1)
+                seguent_centroide = np.argmax(min_dists)
+                centroides.append(seguent_centroide)
+            
+            self.centroids = np.array(centroides)
+            
                         
     def get_labels(self):
         """
