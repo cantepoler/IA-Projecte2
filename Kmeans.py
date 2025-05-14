@@ -159,29 +159,69 @@ class KMeans:
     
     
 
-    def find_bestK(self, max_K):
-        minim = 20 #% minim acceptable
-        best_K = max_K
-        anterior = None
-        
-        wcds = []
-        
-        for k in range(2, max_K+1):
-            kmeans = KMeans(self.X, K=k, options=self.options)
-            kmeans.fit()
-            WCD_k = kmeans.withinClassDistance()
-            wcds.append(WCD_k)
+    def fisher(self):
+        self.fisher_score = self.WCD / self.inter_clase
+        return self.fisher_score
 
-            if anterior is not None:
-                decrement = 100*(1-(WCD_k/anterior))    #Formula pdf
-                if decrement < minim:
-                    best_K = k-1
-                    break
-            
-            anterior = WCD_k
-            
-        self.K = best_K
-        return best_K
+    def bestK_fisher(self, max_K):
+        self.K = 2
+        self.fit()
+
+        self.withinClassDistance()
+        self.inter_class()
+        prev_fisher = self.fisher()
+
+        k_index = 2
+        max_diff = 0
+        opt_K = 2
+        while k_index < max_K:
+            k_index += 1
+            self.K = k_index
+            self.fit()
+
+            self.withinClassDistance()
+            self.inter_class()
+            current_fisher = self.fisher()
+
+            diff = prev_fisher - current_fisher
+
+            if diff > max_diff:
+                max_diff = diff
+                opt_K = self.K
+
+            prev_fisher = current_fisher
+
+        self.K = opt_K
+        self.fit()
+        return opt_K
+
+    def find_bestK(self, max_K):
+        if self.options['fitting'] == 'WCD':
+            best_k = self.bestK_WCD(10)
+        elif self.options['fitting'] == 'Fisher':
+            best_k = self.bestK_fisher(10)
+        return best_k
+
+    def bestK_WCD(self, max_K):
+        self.K = 2
+        self.fit()
+        prev_WCD = self.withinClassDistance()
+
+        idx = 2
+        reduction = 0
+        while (idx < max_K) and ((100 - reduction) >= 20):
+            idx += 1
+            self.K = idx
+            self.fit()
+            curr_WCD = self.withinClassDistance()
+            reduction = 100 * (curr_WCD / prev_WCD)
+            prev_WCD = curr_WCD
+        if idx != max_K:
+            self.K = idx - 1
+            self.fit()
+            return idx
+        else:
+            return max_K
 
 
 def distance(X, C):
