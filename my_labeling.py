@@ -93,7 +93,7 @@ def Kmean_statistics(llista_imgs, Kmax):
         temps = []
         
         for k in ks:
-            kmeans = KMeans(img, k)
+            kmeans = KMeans(img, k, options=options)
             time_start = time.time()
             kmeans.fit()
             time_end = time.time()
@@ -186,10 +186,26 @@ if __name__ == '__main__':
     
     #Aqui començen les diverses proves que hem fet:
     
-    knn = KNN(train_imgs, train_class_labels)
-    knn_predicts = knn.predict(test_imgs, 1)
+    # knn = KNN(train_imgs, train_class_labels)
+    # knn_predicts = knn.predict(test_imgs, 1)
     
-    print (Get_shape_accuracy(knn_predicts, test_class_labels)) #% d'encerts de KNN
+    # print (Get_shape_accuracy(knn_predicts, test_class_labels)) #% d'encerts de KNN
+    
+    #Test_kmeans:Fisher
+    
+    options = {'fitting':'Fisher'}
+    
+    labels = []
+    for i in range(30):
+        kmeans = KMeans(train_imgs[i], K = 2, options=options)
+        kmeans.find_bestK(10)
+        kmeans.fit()
+        labels.append(get_colors(kmeans.centroids))
+
+    print(Get_color_accuracy(labels, train_color_labels[0:30]))
+
+    
+    
     
 
 
