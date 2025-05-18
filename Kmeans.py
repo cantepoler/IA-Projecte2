@@ -186,48 +186,45 @@ class KMeans:
     def fisher(self):
         self.withinClassDistance()
         self.interClassDistance()
-        self.fisher_val = self.WCD / self.ICD
+        self.fisher_val = self.ICD/self.WCD
         return self.fisher_val
 
 
     def find_bestK(self, max_K):
         if self.options['fitting'] == 'WCD':
-            best_k = self.bestK_max(max_K, 'WCD')
+            best_k = self.bestK_min(max_K, 'WCD')
         elif self.options['fitting'] == 'ICD':
-            best_k = self.bestK_min(max_K)
+            best_k = self.bestK_max(max_K, 'ICD')
         elif self.options['fitting'] == 'Fisher':
             best_k = self.bestK_max(max_K, 'Fisher')
         return best_k
 
-    def bestK_max(self, max_K, fitting):         #El bestK original
+    def bestK_min(self, max_K, fitting):         #El bestK original
         minim = 20 #% minim acceptable
         best_K = max_K
         anterior = None
         
-        heur = []
+        wcds = []
         
         for k in range(2, max_K+1):
             kmeans = KMeans(self.X, K=k, options=self.options)
             kmeans.fit()
-            if (fitting == 'WCD'):
-                heur_k = kmeans.withinClassDistance()
-            else:
-                heur_k = kmeans.fisher()
+            WCD_k = kmeans.withinClassDistance()
                 
-            heur.append(heur_k)
+            wcds.append(WCD_k)
 
             if anterior is not None:
-                decrement = 100*(1-(heur_k/anterior))    #Formula pdf
+                decrement = 100*(1-(WCD_k/anterior))    #Formula pdf
                 if decrement < minim:
                     best_K = k-1
                     break
             
-            anterior = heur_k
+            anterior = WCD_k
             
         self.K = best_K
         return best_K
 
-    def bestK_min(self, max_K):
+    def bestK_max(self, max_K, fitting):
         minim = 20  #% minim acceptable
         best_K = 2
         anterior = None
@@ -235,15 +232,20 @@ class KMeans:
         for k in range(2, max_K+1):
             kmeans = KMeans(self.X, K=k, options=self.options)
             kmeans.fit()
-            ICD_k = kmeans.interClassDistance()
+            
+            if (fitting == 'ICD'):
+                heur_k = kmeans.interClassDistance()
+                
+            else:
+                heur_k = kmeans.fisher()
     
             if anterior is not None:
-                increment = 100 * ((ICD_k-anterior)/anterior)
+                increment = 100 * ((heur_k-anterior)/anterior)
                 if increment < minim:
                     best_K = k-1
                     break
     
-            anterior = ICD_k
+            anterior = heur_k
             best_K = k
     
         self.K = best_K

@@ -73,7 +73,7 @@ def Retrieval_combined(images, color_labels, shape_labels, color_question, shape
     result = Retrieval_by_shape(retrieval_color, filtered_shape_labels, shape_question)  #Ara podem reutilitzar la funció anterior
     return result
 
-def Kmean_statistics(llista_imgs, Kmax):
+def Kmean_statistics(llista_imgs, Kmax, color_labels, inits):
     
     """
     Funció que genera un set d'estadístiques d'execució del Kmeans amb 
@@ -83,59 +83,70 @@ def Kmean_statistics(llista_imgs, Kmax):
 
     """
     
-    glob_wcds = []
-    glob_iteracions = []     #Seran llistes de llistes, per a cada kmeans
-    glob_temps = []
+    acc_k = []
+    wcds_init = {init: [] for init in inits}
+    iters_init = {init: [] for init in inits}
+    
     ks = list(range(2, Kmax+1))
-    for img in llista_imgs:        
-        wcds = []
-        iteracions = []
-        temps = []
-        
-        for k in ks:
-            kmeans = KMeans(img, k, options=options)
-            time_start = time.time()
+    
+    options = {'fitting':'WCD', 'km_init':'first'}
+    for k in ks:
+        n = len(llista_imgs)
+        labels = []
+        for i in range(n):
+            kmeans = KMeans(cropped_images[i], k, options=options)
             kmeans.fit()
-            time_end = time.time()
-            
-            temps.append(time_end-time_start)
-            wcds.append(kmeans.withinClassDistance())
-            iteracions.append(kmeans.num_iter)
-        glob_wcds.append(wcds)
-        glob_iteracions.append(iteracions)
-        glob_temps.append(temps)
-            
-    mitjana_wcds = np.mean(glob_wcds, axis=0)
-    mitjana_iteracions = np.mean(glob_iteracions, axis= 0)
-    mitjana_temps = np.mean(glob_temps, axis = 0)
+            labels.append(get_colors(kmeans.centroids))
+        
+        acc = Get_color_accuracy(labels, color_labels)
+        acc_k.append(acc)
+        
+    for init in inits:
+        options = {'fitting':'WCD', 'km_init':init}
+        for k in ks:
+            wcds = []
+            iters = []
+            for img in llista_imgs:
+                kmeans = KMeans(img, k, options=options)
+                kmeans.fit()
+                wcds.append(kmeans.withinClassDistance())
+                iters.append(kmeans.num_iter)
+            wcds_init[init].append(np.mean(wcds))
+            iters_init[init].append(np.mean(iters))
+    
+    # ACC
+    plt.figure()
+    plt.plot(ks, acc_k)
+    plt.title("K vs Color Accuracy per Fitting")
+    plt.xlabel("K")
+    plt.ylabel("Color Accuracy")
+    plt.grid(True)
+    plt.show()
     
     # WCD
     plt.figure()
-    plt.plot(ks, mitjana_wcds)
-    plt.title('K vs WCD')
-    plt.xlabel('K')
-    plt.ylabel('Distància Intra-Class (WCD)')
+    for init in inits:
+        plt.plot(ks, wcds_init[init], label=f"Init:{init}")
+    plt.title("K vs WCD")
+    plt.xlabel("K")
+    plt.ylabel("Within-Class Distance")
+    plt.legend()
     plt.grid(True)
     plt.show()
-
-    # Iteracions
+    
+    # ITERS
     plt.figure()
-    plt.plot(ks, mitjana_iteracions)
-    plt.title('K vs Iteracions')
-    plt.xlabel('K')
-    plt.ylabel('Nombre iteracions')
+    for init in inits:
+        plt.plot(ks, iters_init[init], label=f"Init:{init}")
+    plt.title("K vs Nombre d'iteracions")
+    plt.xlabel("K")
+    plt.ylabel("Iteracions")
+    plt.legend()
     plt.grid(True)
     plt.show()
 
-    # Temps
-    plt.figure()
-    plt.plot(ks, mitjana_temps)
-    plt.title('K vs Temps')
-    plt.xlabel('K')
-    plt.ylabel('Temps')
-    plt.grid(True)
-    plt.show()
 
+    
 def Get_shape_accuracy(result_labels, gt_labels):
     
     """
@@ -168,18 +179,15 @@ def Get_color_accuracy(result_labels, gt_labels):
 
     
     """
-    color_accuracy = 0
-    n_colors_accuracy = 0
+    result = 0
     
     for r_label, gt_label in zip(result_labels, gt_labels):
         r_set = set(r_label)
         gt_set = set(gt_label)
-        if r_set == gt_set: color_accuracy +=1 #Si exactament els conjunts de colors coincideixen,sumem.
-        
-        n_colors_accuracy += min(len(r_label), len(gt_label)) / max(len(r_label), len(gt_label))
-        
-        
-    return color_accuracy/len(result_labels), n_colors_accuracy/len(result_labels)
+        result += len(r_set & gt_set) / len(r_set | gt_set)
+
+            
+    return result/len(result_labels)
 
 if __name__ == '__main__':
 
@@ -196,30 +204,34 @@ if __name__ == '__main__':
     
     #Aqui començen les diverses proves que hem fet:
     
-    # knn = KNN(train_imgs, train_class_labels)
-    # knn_predicts = knn.predict(test_imgs, 1)
+    # === TEST 1: Evaluació Quantitativa KNN ===
+    knn = KNN(train_imgs, train_class_labels)
+    knn_predicts = knn.predict(test_imgs, 3)    #Podem ajustar la K aqui
     
-    # print (Get_shape_accuracy(knn_predicts, test_class_labels)) #% d'encerts de KNN
+    shape_acc = Get_shape_accuracy(knn_predicts, test_class_labels) #% d'encerts de KNN
+    print (f"[KNN] Encerts en prediccions de forma: {shape_acc * 100:.2f}")
     
-    #Test_kmeans:Fisher
+    # === TEST 2: Evaluació Kmeans ===
     
-    Kmeans_options = {'fitting':'Fisher'}  #Opcions pel Kmeans
-    n = 1                  #Nombre d'imatges de test que volem analitzar
+    # TEST 2.1: Test d'accuracy amb bestK i opcions
+    
+    Kmeans_options = {'fitting':'WCD'}  #Opcions pel fitting de bestK
+    n = len(cropped_images)                  #Nombre d'imatges de test que volem analitzar
     
     labels = []
     for i in range(n):
-        kmeans = KMeans(train_imgs[i], K = 2, options=Kmeans_options)
-        kmeans.find_bestK(5)
+        kmeans = KMeans(cropped_images[i], K = 1, options=Kmeans_options)
+        kmeans.find_bestK(10)
         kmeans.fit()
         labels.append(get_colors(kmeans.centroids))
 
-    print(Get_color_accuracy(labels, train_color_labels[0:n]))         
+    color_acc = Get_color_accuracy(labels, color_labels[0:n])
+    print (f"[Kmeans] Encerts en prediccions de color: {color_acc * 100:.2f}")
 
-    imatges = Retrieval_by_color(train_imgs[0:n], labels, ['Blue'])
-    visualize_retrieval(imatges, 5)
+    # TEST 2.2: Recopilació de dades i gràfics sobre Kmeans        
+    
+    Kmean_statistics(cropped_images, 11, color_labels, ['first', 'random', 'maxdist'])
     
     
-    options = {'km_init':'random'}
-    
-    Kmean_statistics(train_imgs[0:2], 4)
+
 
