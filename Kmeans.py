@@ -21,6 +21,7 @@ class KMeans:
         self._init_centroids()
         self.max_iter = 500000
         self.WCD = None
+        self.ICD = None
         
 
     #############################################################
@@ -138,12 +139,14 @@ class KMeans:
         Runs K-Means algorithm until it converges or until the number of iterations is smaller
         than the maximum number of iterations.
         """
-        while 1:
+        self.num_iter = 0
+        self._init_centroids()
+        while self.num_iter < self.options['max_iter']:
             self.get_labels()
             self.get_centroids()
-            self.num_iter += 1
-            if self.converges(): break;
-            elif self.num_iter >= self.max_iter: break;
+            if self.converges():
+                break
+            self.num_iter +=1
         
         
     def withinClassDistance(self):
@@ -156,32 +159,88 @@ class KMeans:
         self.WCD = np.mean(dist_punt_centroid)
         return np.mean(dist_punt_centroid)
     
-    
-    
+    def interClassDistance(self):
+        """
+        Returns the inter class distance using centroid distances
+        """
+        suma = 0
+        n = 0
+        for i in range(self.K):
+            for j in range(i + 1, self.K):
+                dist = np.linalg.norm(self.centroids[i] - self.centroids[j])
+                suma += dist
+                n += 1
+        self.ICD = suma/n
+        return self.ICD       
+        
+
+    def fisher(self):
+        self.withinClassDistance()
+        self.interClassDistance()
+        self.fisher_val = self.WCD / self.ICD
+        return self.fisher_val
+
 
     def find_bestK(self, max_K):
+        if self.options['fitting'] == 'WCD':
+            best_k = self.bestK_max(max_K, 'WCD')
+        elif self.options['fitting'] == 'ICD':
+            best_k = self.bestK_min(max_K)
+        elif self.options['fitting'] == 'Fisher':
+            best_k = self.bestK_max(max_K, 'Fisher')
+        return best_k
+
+    def bestK_max(self, max_K, fitting):         #El bestK original
         minim = 20 #% minim acceptable
         best_K = max_K
         anterior = None
         
-        wcds = []
+        heur = []
         
         for k in range(2, max_K+1):
             kmeans = KMeans(self.X, K=k, options=self.options)
             kmeans.fit()
-            WCD_k = kmeans.withinClassDistance()
-            wcds.append(WCD_k)
+            if (fitting == 'WCD'):
+                heur_k = kmeans.withinClassDistance()
+            else:
+                heur_k = kmeans.fisher()
+                
+            heur.append(heur_k)
 
             if anterior is not None:
-                decrement = 100*(1-(WCD_k/anterior))    #Formula pdf
+                decrement = 100*(1-(heur_k/anterior))    #Formula pdf
                 if decrement < minim:
                     best_K = k-1
                     break
             
-            anterior = WCD_k
+            anterior = heur_k
             
         self.K = best_K
         return best_K
+
+    def bestK_min(self, max_K):
+        minim = 20  #% minim acceptable
+        best_K = 2
+        anterior = None
+    
+        for k in range(2, max_K+1):
+            kmeans = KMeans(self.X, K=k, options=self.options)
+            kmeans.fit()
+            ICD_k = kmeans.interClassDistance()
+    
+            if anterior is not None:
+                increment = 100 * ((ICD_k-anterior)/anterior)
+                if increment < minim:
+                    best_K = k-1
+                    break
+    
+            anterior = ICD_k
+            best_K = k
+    
+        self.K = best_K
+        self.fit()
+        return best_K
+
 
 
 def distance(X, C):
