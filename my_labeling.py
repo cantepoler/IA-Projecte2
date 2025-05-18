@@ -117,7 +117,7 @@ def Kmean_statistics(llista_imgs, Kmax, color_labels, inits):
     # ACC
     plt.figure()
     plt.plot(ks, acc_k)
-    plt.title("K vs Color Accuracy per Fitting")
+    plt.title("K vs Color Accuracy")
     plt.xlabel("K")
     plt.ylabel("Color Accuracy")
     plt.grid(True)
@@ -189,6 +189,33 @@ def Get_color_accuracy(result_labels, gt_labels):
             
     return result/len(result_labels)
 
+
+
+def real_vs_predicted_K(cropped_images, color_labels, max_K=10, fitting='WCD'):
+    K_real_list = []
+    K_pred_list = []
+
+    for i, img in enumerate(cropped_images):
+        X = img
+        k_real = len(set(color_labels[i]))
+        K_real_list.append(k_real)
+
+        options = {'fitting': fitting, 'km_init': 'random'}
+        kmeans = KMeans(X, options=options)
+        k_pred = kmeans.find_bestK(max_K)
+        K_pred_list.append(k_pred)
+
+    plt.figure()
+    plt.scatter(K_real_list, K_pred_list)
+    plt.plot(range(1, max(K_real_list)+1), range(1, max(K_real_list)+1), 'r--', label='K_pred = K_real')
+    plt.xlabel("K real")
+    plt.ylabel("K predit")
+    plt.title(f"Comparació K real vs predit - Fitting: {fitting}")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+    
+    
 if __name__ == '__main__':
 
     # Load all the images and GT
@@ -204,18 +231,11 @@ if __name__ == '__main__':
     
     #Aqui començen les diverses proves que hem fet:
     
-    # === TEST 1: Evaluació Quantitativa KNN ===
-    knn = KNN(train_imgs, train_class_labels)
-    knn_predicts = knn.predict(test_imgs, 3)    #Podem ajustar la K aqui
+    # === TEST 1: Evaluació Qualitativa Kmeans i KNN ===
     
-    shape_acc = Get_shape_accuracy(knn_predicts, test_class_labels) #% d'encerts de KNN
-    print (f"[KNN] Encerts en prediccions de forma: {shape_acc * 100:.2f}")
-    
-    # === TEST 2: Evaluació Kmeans ===
-    
-    # TEST 2.1: Test d'accuracy amb bestK i opcions
-    
-    Kmeans_options = {'fitting':'WCD'}  #Opcions pel fitting de bestK
+    # TEST 2.1: Test de filtratge per color
+
+    Kmeans_options = {'fitting':'WCD', 'km_init':'maxdist'}  #Opcions pel fitting de bestK
     n = len(cropped_images)                  #Nombre d'imatges de test que volem analitzar
     
     labels = []
@@ -224,14 +244,44 @@ if __name__ == '__main__':
         kmeans.find_bestK(10)
         kmeans.fit()
         labels.append(get_colors(kmeans.centroids))
+    
+    filtered_imgs = Retrieval_by_color(imgs, labels, ['Green', 'Red' ])
+    visualize_retrieval(filtered_imgs, 8)
+    
+    # TEST 2.2: Test de filtratge per forma
+    
+    knn = KNN(train_imgs, train_class_labels)
+    knn_predicts = knn.predict(test_imgs, 3)    #Podem ajustar la K aqui
+    
+    filtered_imgs = Retrieval_by_shape(test_imgs, knn_predicts, ['Jeans', 'Dress'])
+    visualize_retrieval(filtered_imgs, 8)
+        
+    # TEST 2.3: Test de filtratge per forma i color
 
-    color_acc = Get_color_accuracy(labels, color_labels[0:n])
-    print (f"[Kmeans] Encerts en prediccions de color: {color_acc * 100:.2f}")
+    filtered_imgs = Retrieval_combined(test_imgs, labels, knn_predicts, ['Grey'], ['Shirt'])
+    visualize_retrieval(filtered_imgs, 4)
 
-    # TEST 2.2: Recopilació de dades i gràfics sobre Kmeans        
     
-    Kmean_statistics(cropped_images, 11, color_labels, ['first', 'random', 'maxdist'])
+    # # === TEST 2: Evaluació Quantitativa KNN ===
+    # knn = KNN(train_imgs, train_class_labels)
+    # knn_predicts = knn.predict(test_imgs, 3)    #Podem ajustar la K aqui
     
+    # shape_acc = Get_shape_accuracy(knn_predicts, test_class_labels) #% d'encerts de KNN
+    # print (f"[KNN] Encerts en prediccions de forma: {shape_acc * 100:.2f}")
     
+    # # === TEST 3: Evaluació Kmeans ===
+    
+    # # TEST 2.1: Test d'accuracy amb bestK i opcions
+    
+
+
+    # color_acc = Get_color_accuracy(labels, color_labels[0:n])
+    # print (f"[Kmeans] Encerts en prediccions de color: {color_acc * 100:.2f}")
+
+    # # TEST 2.2: Recopilació de dades i gràfics sobre Kmeans        
+    
+    # Kmean_statistics(cropped_images, 11, color_labels, ['first', 'random', 'maxdist'])
+    
+    # plot_real_vs_predicted_K(cropped_images, color_labels, fitting="WCD")
 
 

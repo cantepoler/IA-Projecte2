@@ -223,6 +223,7 @@ class KMeans:
             
         self.K = best_K
         return best_K
+    
 
     def bestK_max(self, max_K, fitting):
         minim = 20  #% minim acceptable
