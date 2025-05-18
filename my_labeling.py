@@ -1,4 +1,4 @@
-__authors__ = '1706732, , '
+__authors__ = '1706732', '1707531', '1704706'
 __group__ = '14'
 
 from Kmeans import *
