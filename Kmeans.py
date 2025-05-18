@@ -88,8 +88,9 @@ class KMeans:
             self.centroids = np.array(elements_unics)
             
         elif self.options['km_init'].lower() == 'random':
-            indexs_aleatoris = np.random.choice(self.X.shape[0], size=self.K, replace=False)
-            self.centroids = self.X[indexs_aleatoris]
+            X_unics = np.unique(self.X, axis=0)
+            indexs_aleatoris = np.random.choice(X_unics.shape[0], size=self.K, replace=False)
+            self.centroids = X_unics[indexs_aleatoris]
             
         elif self.options['km_init'].lower() == 'maxdist':
             centroides = [self.X[np.random.randint(self.X.shape[0])]] #El primer centroide és aleatori
@@ -98,7 +99,7 @@ class KMeans:
                 dists = distance(self.X, np.array(centroides))
                 min_dists = np.min(dists, axis=1)
                 seguent_centroide = np.argmax(min_dists)
-                centroides.append(seguent_centroide)
+                centroides.append(self.X[seguent_centroide])
             
             self.centroids = np.array(centroides)
             

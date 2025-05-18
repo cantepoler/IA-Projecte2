@@ -3,7 +3,7 @@ __group__ = '14'
 
 from Kmeans import *
 from KNN import *
-from utils_data import read_dataset, read_extended_dataset, crop_images, visualize_k_means
+from utils_data import read_dataset, read_extended_dataset, crop_images, visualize_k_means, visualize_retrieval
 import time
 import matplotlib.pyplot as plt
 
@@ -204,11 +204,11 @@ if __name__ == '__main__':
     #Test_kmeans:Fisher
     
     Kmeans_options = {'fitting':'Fisher'}  #Opcions pel Kmeans
-    n = 150                  #Nombre d'imatges de test que volem analitzar
+    n = 1                  #Nombre d'imatges de test que volem analitzar
     
     labels = []
     for i in range(n):
-        kmeans = KMeans(train_imgs[i], K = 2, options=options)
+        kmeans = KMeans(train_imgs[i], K = 2, options=Kmeans_options)
         kmeans.find_bestK(5)
         kmeans.fit()
         labels.append(get_colors(kmeans.centroids))
@@ -219,7 +219,7 @@ if __name__ == '__main__':
     visualize_retrieval(imatges, 5)
     
     
-    options = {'km_init':'maxDist'}
+    options = {'km_init':'random'}
     
-    Kmean_statistics(train_imgs[0:10], 10)
+    Kmean_statistics(train_imgs[0:2], 4)
 
