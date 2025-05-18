@@ -160,16 +160,26 @@ def Get_color_accuracy(result_labels, gt_labels):
     Possible millora: Aquesta funció pot ser millorada retornant la correspondència d'etiquetes errònies 
     amb les etiquetes correctes en base al Ground-Truth
     
+    
+    En el nostre cas, hem decidit que cal tenir dues mètriques diferents, amb objectiu de medir exactament
+    el que volem.
+    color_accuracy: Ens indica el percentetge de prediccions encertades amb el color.
+    n_colors_accuracy: Ens indica el percentetge de prediccions encertades amb nombre de colors (K).
+
+    
     """
-    result = 0
+    color_accuracy = 0
+    n_colors_accuracy = 0
+    
     for r_label, gt_label in zip(result_labels, gt_labels):
         r_set = set(r_label)
         gt_set = set(gt_label)
-        if r_set:
-            match = len(r_set.intersection(gt_set))
-            result += match/len(r_set)
-            
-    return result/len(result_labels)
+        if r_set == gt_set: color_accuracy +=1 #Si exactament els conjunts de colors coincideixen,sumem.
+        
+        n_colors_accuracy += min(len(r_label), len(gt_label)) / max(len(r_label), len(gt_label))
+        
+        
+    return color_accuracy/len(result_labels), n_colors_accuracy/len(result_labels)
 
 if __name__ == '__main__':
 
@@ -193,18 +203,20 @@ if __name__ == '__main__':
     
     #Test_kmeans:Fisher
     
-    options = {'fitting':'Fisher'}
+    Kmeans_options = {'fitting':'Fisher'}  #Opcions pel Kmeans
+    n = 150                  #Nombre d'imatges de test que volem analitzar
     
     labels = []
-    for i in range(30):
+    for i in range(n):
         kmeans = KMeans(train_imgs[i], K = 2, options=options)
-        kmeans.find_bestK(10)
+        kmeans.find_bestK(5)
         kmeans.fit()
         labels.append(get_colors(kmeans.centroids))
 
-    print(Get_color_accuracy(labels, train_color_labels[0:30]))
+    print(Get_color_accuracy(labels, train_color_labels[0:n]))         
 
-    
+    imatges = Retrieval_by_color(train_imgs[0:n], labels, ['Blue'])
+    visualize_retrieval(imatges, 5)
     
     
 
