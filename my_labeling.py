@@ -262,26 +262,24 @@ if __name__ == '__main__':
     visualize_retrieval(filtered_imgs, 4)
 
     
-    # # === TEST 2: Evaluació Quantitativa KNN ===
-    # knn = KNN(train_imgs, train_class_labels)
-    # knn_predicts = knn.predict(test_imgs, 3)    #Podem ajustar la K aqui
+    # === TEST 2: Evaluació Quantitativa KNN ===
+    knn = KNN(train_imgs, train_class_labels)
+    knn_predicts = knn.predict(test_imgs, 3)    #Podem ajustar la K aqui
     
-    # shape_acc = Get_shape_accuracy(knn_predicts, test_class_labels) #% d'encerts de KNN
-    # print (f"[KNN] Encerts en prediccions de forma: {shape_acc * 100:.2f}")
+    shape_acc = Get_shape_accuracy(knn_predicts, test_class_labels) #% d'encerts de KNN
+    print (f"[KNN] Encerts en prediccions de forma: {shape_acc * 100:.2f}")
     
-    # # === TEST 3: Evaluació Kmeans ===
+    # === TEST 3: Evaluació Kmeans ===
     
-    # # TEST 2.1: Test d'accuracy amb bestK i opcions
+    # TEST 3.1: Test d'accuracy amb bestK i opcions
     
+    color_acc = Get_color_accuracy(labels, color_labels[0:n])
+    print (f"[Kmeans] Encerts en prediccions de color: {color_acc * 100:.2f}")
 
-
-    # color_acc = Get_color_accuracy(labels, color_labels[0:n])
-    # print (f"[Kmeans] Encerts en prediccions de color: {color_acc * 100:.2f}")
-
-    # # TEST 2.2: Recopilació de dades i gràfics sobre Kmeans        
+    # TEST 3.2: Recopilació de dades i gràfics sobre Kmeans        
     
-    # Kmean_statistics(cropped_images, 11, color_labels, ['first', 'random', 'maxdist'])
+    Kmean_statistics(cropped_images, 11, color_labels, ['first', 'random', 'maxdist'])
     
-    # plot_real_vs_predicted_K(cropped_images, color_labels, fitting="WCD")
+    plot_real_vs_predicted_K(cropped_images, color_labels, fitting="WCD")
 
 
