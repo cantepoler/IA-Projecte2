@@ -219,6 +219,7 @@ if __name__ == '__main__':
     visualize_retrieval(imatges, 5)
     
     
-
-
+    options = {'km_init':'maxDist'}
+    
+    Kmean_statistics(train_imgs[0:10], 10)
 
